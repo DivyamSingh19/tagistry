@@ -24,27 +24,27 @@ def parse_arguments():
     return parser.parse_args()
 
 def main():
-    # Parse command-line arguments
+     
     args = parse_arguments()
     
-    # Set up logging
+     
     log_level = getattr(logging, args.log_level)
     logger = setup_logger(log_level=log_level)
     logger.info("Starting Pinterest content protection scraper")
     
-    # Initialize components
+     
     file_handler = FileHandler(logger)
     
-    # Initialize WebDriver
+   
     driver_manager = DriverManager(browser_type="chrome", headless=args.headless, logger=logger)
     driver = driver_manager.initialize_driver()
     
     try:
-        # Initialize Pinterest scraper and hasher
+         
         pinterest_scraper = PinterestScraper(driver, logger)
         hash_generator = HashGenerator(logger)
         
-        # Handle authentication if requested
+       
         if args.login:
             auth_manager = PinterestAuthManager(driver, logger, credentials_file=args.credentials)
             if not auth_manager.login():
@@ -53,24 +53,24 @@ def main():
         scraped_data = []
         hash_records = []
         
-        # Process based on input arguments
+         
         if args.query:
-            # Search Pinterest for pins
+           
             logger.info(f"Searching Pinterest for: {args.query}")
             pins = pinterest_scraper.search_pinterest(args.query, scroll_count=args.scroll, pin_limit=args.limit)
             
-            # Save raw scraped data
+           
             timestamp = int(time.time())
             raw_filename = f"data/raw/pinterest_search_{timestamp}.json"
             file_handler.save_json(pins, raw_filename)
             
-            # Generate hashes for each pin
+             
             for pin in pins:
                 hash_record = hash_generator.create_pin_hash_record(pin)
                 if hash_record:
                     hash_records.append(hash_record)
             
-            # Save hash records
+           
             hash_filename = f"data/hashes/pinterest_search_hashes_{timestamp}.json"
             file_handler.save_json(hash_records, hash_filename)
             
@@ -78,22 +78,22 @@ def main():
             scraped_data = pins
             
         elif args.board:
-            # Scrape pins from a board
+          
             logger.info(f"Scraping board: {args.board}")
             board_data = pinterest_scraper.scrape_board(args.board, scroll_count=args.scroll, pin_limit=args.limit)
             
-            # Save raw board data
+            
             timestamp = int(time.time())
             raw_filename = f"data/raw/pinterest_board_{timestamp}.json"
             file_handler.save_json(board_data, raw_filename)
             
-            # Generate hashes for each pin in the board
+            
             for pin in board_data["pins"]:
                 hash_record = hash_generator.create_pin_hash_record(pin)
                 if hash_record:
                     hash_records.append(hash_record)
             
-            # Save hash records
+           
             hash_filename = f"data/hashes/pinterest_board_hashes_{timestamp}.json"
             file_handler.save_json(hash_records, hash_filename)
             
@@ -101,22 +101,22 @@ def main():
             scraped_data = board_data
             
         elif args.pin:
-            # Scrape a single pin
+           
             logger.info(f"Scraping pin: {args.pin}")
             pin_data = pinterest_scraper.scrape_pin_details(args.pin)
             
             if pin_data:
-                # Save raw pin data
+               
                 timestamp = int(time.time())
                 raw_filename = f"data/raw/pinterest_pin_{timestamp}.json"
                 file_handler.save_json(pin_data, raw_filename)
                 
-                # Generate hash for the pin
+               
                 hash_record = hash_generator.create_pin_hash_record(pin_data)
                 if hash_record:
                     hash_records.append(hash_record)
                     
-                    # Save hash record
+                   
                     hash_filename = f"data/hashes/pinterest_pin_hash_{timestamp}.json"
                     file_handler.save_json(hash_record, hash_filename)
                 
@@ -129,7 +129,7 @@ def main():
         else:
             logger.error("No action specified. Use --query, --board, or --pin arguments.")
         
-        # Save final results
+        
         results = {
             "timestamp": int(time.time()),
             "type": "search" if args.query else "board" if args.board else "pin" if args.pin else "unknown",
